@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 from indexing import index_data
-from query import print_similar
+# from query import print_similar
 
 
 # Define evaluation prompts

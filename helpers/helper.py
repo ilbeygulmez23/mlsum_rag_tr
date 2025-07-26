@@ -27,4 +27,5 @@ def list_indices():
 
 
 if __name__ == "__main__":
+    delete_index("mlsum_tr_semantic")
     list_indices()
