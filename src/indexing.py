@@ -1,4 +1,4 @@
-from elasticsearch.helpers import bulk
+from elasticsearch.helpers import streaming_bulk
 from elasticsearch import Elasticsearch
 from datasets import load_dataset
 from tqdm import tqdm
@@ -22,7 +22,7 @@ def index_data(model, index_name="mlsum_tr_semantic"):
                         "text": {"type": "text"},
                         "summary": {"type": "text"},
                         "title": {"type": "text"},
-                        "date": {"type": "date"},
+                        "date": {"type": "text"},
                         "embedding": {
                         "type": "dense_vector",
                         "dims": model.get_sentence_embedding_dimension(),
@@ -48,7 +48,7 @@ def index_data(model, index_name="mlsum_tr_semantic"):
             embeddings = model.encode(texts, batch_size=64).tolist()
             return {"embedding": embeddings}
 
-        dataset = dataset.map(batched_embed, batched=True, batch_size=64)
+        dataset = dataset.map(batched_embed, batched=True, batch_size=64, load_from_cache_file=False)
 
         def doc_generator(dataset, index_name):
             for idx, row in enumerate(dataset):
@@ -66,13 +66,16 @@ def index_data(model, index_name="mlsum_tr_semantic"):
 
         es.indices.put_settings(index=index_name, body={"index": {"refresh_interval": "-1"}})
 
-        actions = list(doc_generator(dataset, index_name))
-        
-        # Bulk index the documents -- must be changed for much much bigger docs, 4/5 scalability
-        success, failed = bulk(es, actions, stats_only=True)
-        print(f"✅ Indexed {success} documents. ❌ Failed: {failed}")
+        # Stream and monitor status
+        success_count = 0
+        for ok, response in tqdm(streaming_bulk(es, doc_generator(dataset, index_name), chunk_size=500)):
+            if not ok:
+                print("❌ Failed to index document:", response)
+            else:
+                success_count += 1
 
         es.indices.put_settings(index=index_name, body={"index": {"refresh_interval": "1s"}})
+        print(f"✅ Indexed {success_count} documents successfully.")
 
 
 # Reformat the dates
