@@ -1,9 +1,8 @@
 import sys
 import os
-import pandas as pd
 from sentence_transformers import SentenceTransformer
-from indexing import index_data
-# from query import print_similar
+from src.indexing import index_data
+from src.query import query_similar, print_retrievals
 
 
 # Define evaluation prompts
@@ -38,15 +37,15 @@ def main():
     index_data(model)
     print("\n>>> Data is successfully indexed.")
 
-    exit()
 
     # Step 2: Query similar results and export top_k_results.csv
-    print("\n>>> Querying top-k results and writing to CSV...")
+    print("\n>>> Querying with the prompts")
     if os.path.exists("top_k_results.csv"):
         os.remove("top_k_results.csv")
 
     for prompt in PROMPTS:
-        print_similar(prompt, model, model_name=model_name)
+        retrievals = query_similar(prompt, model)
+        print_retrievals(prompt, retrievals)
 
     print("\n✅ Pipeline complete. Results saved to top_k_results.csv")
 
