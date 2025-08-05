@@ -2,8 +2,7 @@ from elasticsearch.helpers import streaming_bulk
 from elasticsearch import Elasticsearch
 from datasets import load_dataset
 from tqdm import tqdm
-
-# count 0 indexed, smth is wrong
+from scripts.date_formatter import format_month_year
 
 def index_data(model, index_name="mlsum_tr_semantic"):
     # Connect to Elasticsearch
@@ -22,11 +21,11 @@ def index_data(model, index_name="mlsum_tr_semantic"):
                         "text": {"type": "text"},
                         "summary": {"type": "text"},
                         "title": {"type": "text"},
-                        "date": {"type": "text"},
+                        "date": {"type": "text"}, # Ocak 2024 # date_string custom field # 00/01/2010
                         "embedding": {
-                        "type": "dense_vector",
-                        "dims": model.get_sentence_embedding_dimension(),
-                        "index": True,
+                            "type": "dense_vector",
+                            "dims": model.get_sentence_embedding_dimension(), # index reload
+                            "index": True,
                         "similarity": "cosine"
                     }
                     }
@@ -46,7 +45,10 @@ def index_data(model, index_name="mlsum_tr_semantic"):
                 for title, summary in zip(batch["title"], batch["summary"])
             ]
             embeddings = model.encode(texts, batch_size=64).tolist()
+            
             return {"embedding": embeddings}
+        
+
 
         dataset = dataset.map(batched_embed, batched=True, batch_size=64, load_from_cache_file=False)
 
@@ -59,7 +61,7 @@ def index_data(model, index_name="mlsum_tr_semantic"):
                         "text": row["text"],
                         "summary": row["summary"],
                         "title": row["title"],
-                        "date": row["date"],
+                        "date": format_month_year(row["date"]),
                         "embedding": row["embedding"]
                     }
                 }
@@ -78,19 +80,4 @@ def index_data(model, index_name="mlsum_tr_semantic"):
         print(f"✅ Indexed {success_count} documents successfully.")
 
 
-# Reformat the dates
-turkish_months = {
-    1: "Ocak", 2: "Şubat", 3: "Mart", 4: "Nisan",
-    5: "Mayıs", 6: "Haziran", 7: "Temmuz", 8: "Ağustos",
-    9: "Eylül", 10: "Ekim", 11: "Kasım", 12: "Aralık"
-}
 
-def format_month_year(date_str):
-    try:
-        parts = date_str.split("/")  # expected: "00/MM/YYYY"
-        month = int(parts[1])
-        year = parts[2]
-        month_name = turkish_months[month]
-        return f"{month_name} {year}"  # e.g., "Ocak 2024"
-    except Exception as e:
-        return ""
