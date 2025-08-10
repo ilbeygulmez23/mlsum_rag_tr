@@ -1,5 +1,4 @@
 import sys
-import os
 from sentence_transformers import SentenceTransformer
 from src.indexing import index_data
 from src.query import query_similar, print_retrievals
@@ -40,14 +39,12 @@ def main():
 
     # Step 2: Query similar results and export top_k_results.csv
     print("\n>>> Querying with the prompts")
-    if os.path.exists("top_k_results.csv"):
-        os.remove("top_k_results.csv")
 
     for prompt in PROMPTS:
         retrievals = query_similar(prompt, model)
         print_retrievals(prompt, retrievals)
 
-    print("\n✅ Pipeline complete. Results saved to top_k_results.csv")
+    print("\n✅ Pipeline complete.")
 
 
 if __name__ == "__main__":
