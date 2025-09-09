@@ -19,9 +19,7 @@ def query_similar(prompt, model, k=10, index="mlsum_tr_semantic", host="localhos
         raise ValueError(f"Dimension mismatch: got {len(embedding)}, expected {dims}")
 
     # Choose size of final result set
-    size = 25
     window_size = 50
-    rank_constant = 60
 
     # Build the hybrid RRF body
     if date:

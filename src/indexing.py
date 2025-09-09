@@ -79,5 +79,4 @@ def index_data(model, index_name="mlsum_tr_semantic"):
         es.indices.put_settings(index=index_name, body={"index": {"refresh_interval": "1s"}})
         print(f"✅ Indexed {success_count} documents successfully.")
 
-
-
+    return es

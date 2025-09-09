@@ -2,6 +2,7 @@ import sys
 from sentence_transformers import SentenceTransformer
 from src.indexing import index_data
 from src.query import query_similar, print_retrievals
+from src.reranker import CrossEncoderReranker
 
 
 # Define evaluation prompts
@@ -18,14 +19,13 @@ PROMPTS = [
     "Üniversite sınav sistemiyle ilgili yapılan son değişiklikler nelerdir?"
 ]
 
-#"jinaai/jina-embeddings-v3"
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python driver.py <embedding-model-name>")
-        print("Example: python driver.py all-MiniLM-L6-v2")
+    if len(sys.argv) > 2:
+        print("Usage: python -m src.driver <embedding-model-name>")
+        print("Example: python -m src.driver jinaai/jina-embeddings-v3")
         sys.exit(1)
 
-    model_name = sys.argv[1]
+    model_name = sys.argv[1] if len(sys.argv) == 2 else "jinaai/jina-embeddings-v3"
     print(f"\n>>> Loading embedding model: {model_name}")
 
     model = SentenceTransformer(model_name, trust_remote_code=True)
@@ -33,16 +33,16 @@ def main():
 
     # Step 1: Index data
     print("\n>>> Indexing data into Elasticsearch...")
-    index_data(model)
-    print("\n>>> Data is successfully indexed.")
+    es = index_data(model)
 
-
-    # Step 2: Query similar results and export top_k_results.csv
-    print("\n>>> Querying with the prompts")
-
+    # Step 2: Query similar results
+    print("\n>>> Querying reranked retrievals with the prompts")
+    reranker = CrossEncoderReranker()
     for prompt in PROMPTS:
-        retrievals = query_similar(prompt, model)
-        print_retrievals(prompt, retrievals)
+        retrievals = query_similar(prompt, model, es=es)
+        reranked_retrievals = reranker.rerank_with_metadata(prompt, retrievals)
+        print_retrievals(prompt, reranked_retrievals)
+
 
     print("\n✅ Pipeline complete.")
 
