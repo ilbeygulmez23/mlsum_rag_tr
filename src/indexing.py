@@ -80,3 +80,4 @@ def index_data(model, index_name="mlsum_tr_semantic"):
         print(f"✅ Indexed {success_count} documents successfully.")
 
     return es
+    

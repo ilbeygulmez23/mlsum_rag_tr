@@ -1,0 +1,9 @@
+torch>=2.1
+transformers>=4.35
+sentence-transformers>=2.2
+elasticsearch==8.11.0
+datasets==3.6.0
+pyarrow==11.0.0
+tqdm
+numpy<2
+
