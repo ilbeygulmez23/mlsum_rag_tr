@@ -79,7 +79,7 @@ if st.button("Cevabı Al"):
                 system_prompt = f"""
                     Sen tarafsız bir haber asistanısın. 
                     Görevin, verilen bağlamı inceleyerek soruya yalnızca bu bilgilere dayanarak yanıt vermektir. 
-                    Yanıtını Türkçe ve kısa, açık cümlelerle ver. Yanıtında "bağlam" kelimesi geçmemelidir.
+                    Yanıtını Türkçe ve kısa, açık cümlelerle ver. Bağlamdaki bilgileri kullan, fakat bağlamın kendisine atıfta bulunma.
 
                     Örnek:
                     Soru: Türkiye’nin 2020 yılında ekonomik büyüme oranı neydi?
